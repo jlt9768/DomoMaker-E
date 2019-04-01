@@ -5,7 +5,7 @@ var handleDomo = function handleDomo(e) {
 
     $("#domoMessage").animate({ width: 'hide' }, 350);
 
-    if ($("#domoName").val() == '' || $("#domoAge").val() == '') {
+    if ($("#domoName").val() == '' || $("#domoAge").val() == '' || $("#domoWeight").val() == '') {
         handleError("RAWR! All fields are required");
         return false;
     };
@@ -15,6 +15,22 @@ var handleDomo = function handleDomo(e) {
     });
 
     return false;
+};
+
+var handleOnChange = function handleOnChange(e) {
+    loadFilteredFromServer();
+};
+var Filter = function Filter(props) {
+    return React.createElement(
+        "div",
+        null,
+        React.createElement(
+            "label",
+            { htmlfor: "filter" },
+            "Filter: "
+        ),
+        React.createElement("input", { id: "filterText", type: "text", name: "filter", onChange: handleOnChange })
+    );
 };
 
 var DomoForm = function DomoForm(props) {
@@ -38,6 +54,12 @@ var DomoForm = function DomoForm(props) {
             "Age: "
         ),
         React.createElement("input", { id: "domoAge", type: "text", name: "age", placeholder: "Domo Age" }),
+        React.createElement(
+            "label",
+            { htmlFor: "weight" },
+            "Weight: "
+        ),
+        React.createElement("input", { id: "domoWeight", type: "text", name: "weight", placeholder: "Domo Weight" }),
         React.createElement("input", { type: "hidden", name: "_csrf", value: props.csrf }),
         React.createElement("input", { className: "makeDomoSubmit", type: "submit", value: "Make Domo" })
     );
@@ -57,6 +79,7 @@ var DomoList = function DomoList(props) {
     };
 
     var domoNodes = props.domos.map(function (domo) {
+        console.log();
         return React.createElement(
             "div",
             { key: domo._id, className: "domo" },
@@ -72,6 +95,12 @@ var DomoList = function DomoList(props) {
                 { className: "domoAge" },
                 " Age: ",
                 domo.age
+            ),
+            React.createElement(
+                "h3",
+                { className: "domoWeight" },
+                " Weight: ",
+                domo.weight
             )
         );
     });
@@ -81,6 +110,19 @@ var DomoList = function DomoList(props) {
         { className: "domoList" },
         domoNodes
     );
+};
+
+var loadFilteredFromServer = function loadFilteredFromServer() {
+    sendAjax('GET', '/getDomos', null, function (data) {
+        var filtered = data.domos.filter(function (value, index, arr) {
+
+            if ($("#filterText").val() === '' || value.name.toLocaleLowerCase() === $("#filterText").val().toLocaleLowerCase()) {
+                return value;
+            };
+        });
+
+        ReactDOM.render(React.createElement(DomoList, { domos: filtered }), document.querySelector("#domos"));
+    });
 };
 
 var loadDomosFromServer = function loadDomosFromServer() {
@@ -93,7 +135,7 @@ var setup = function setup(csrf) {
     ReactDOM.render(React.createElement(DomoForm, { csrf: csrf }), document.querySelector("#makeDomo"));
 
     ReactDOM.render(React.createElement(DomoList, { domos: [] }), document.querySelector("#domos"));
-
+    ReactDOM.render(React.createElement(Filter, null), document.querySelector("#filter"));
     loadDomosFromServer();
 };
 

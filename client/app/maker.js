@@ -3,7 +3,7 @@ const handleDomo = (e) => {
     
     $("#domoMessage").animate({width:'hide'}, 350);
     
-    if($("#domoName").val() == '' || $("#domoAge").val() == ''){
+    if($("#domoName").val() == '' || $("#domoAge").val() == '' || $("#domoWeight").val() == ''){
         handleError("RAWR! All fields are required");
         return false;
     };
@@ -14,6 +14,20 @@ const handleDomo = (e) => {
     
     return false;
 };
+
+const handleOnChange = (e) =>{
+    loadFilteredFromServer();
+}
+const Filter = (props) => {
+  return(
+      <div>
+        <label htmlfor="filter">Filter: </label>
+        <input id = "filterText" type="text" name = "filter" onChange={handleOnChange}/>
+      </div>
+  
+  );  
+};
+
 
 const DomoForm = (props) => {
     return(
@@ -28,9 +42,14 @@ const DomoForm = (props) => {
         <input id = "domoName" type="text" name="name" placeholder = "Domo Name"/>
         <label htmlFor="age">Age: </label>
         <input id = "domoAge" type="text" name="age" placeholder = "Domo Age"/>
+        <label htmlFor="weight">Weight: </label>
+        <input id = "domoWeight" type="text" name="weight" placeholder = "Domo Weight"/>
+        
         <input type = "hidden" name = "_csrf" value = {props.csrf}/>
         <input className = "makeDomoSubmit" type = "submit" value = "Make Domo" />
         </form>
+        
+
     );  
 };
 
@@ -44,13 +63,16 @@ const DomoList = function(props) {
     };
     
     const domoNodes = props.domos.map(function(domo) {
-        return(
+            console.log();
+            return(
             <div key={domo._id} className = "domo">
                 <img src="/assets/img/domoface.jpeg" alt ="domo face" className = "domoFace" />
                 <h3 className = "domoName">Name: {domo.name}</h3>
                 <h3 className = "domoAge"> Age: {domo.age}</h3>
+                <h3 className = "domoWeight"> Weight: {domo.weight}</h3>
             </div>     
-        ); 
+        );
+         
     });
     
     return(
@@ -59,6 +81,21 @@ const DomoList = function(props) {
         </div>
     );
 };
+
+const loadFilteredFromServer = () =>{
+    sendAjax('GET', '/getDomos', null, (data) => {
+       let filtered = data.domos.filter(function(value,index,arr){
+            
+            if($("#filterText").val() === '' || value.name.toLocaleLowerCase() === $("#filterText").val().toLocaleLowerCase()){
+                 return value;
+            };
+       });
+       
+       ReactDOM.render(
+            <DomoList domos={filtered}/>, document.querySelector("#domos")
+       ); 
+    });
+}
 
 const loadDomosFromServer = () => {
     sendAjax('GET', '/getDomos', null, (data) => {
@@ -76,7 +113,9 @@ const setup = function(csrf){
     ReactDOM.render(
         <DomoList domos= {[]} />, document.querySelector("#domos")
     );
-    
+    ReactDOM.render(
+        <Filter />, document.querySelector("#filter")
+    );
     loadDomosFromServer();
 };
 
